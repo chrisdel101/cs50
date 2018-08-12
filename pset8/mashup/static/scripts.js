@@ -57,9 +57,9 @@ $(document).ready(function() {
     // Configure UI once Google Map is idle (i.e., loaded)
     google.maps.event.addListenerOnce(map, "idle", configure);
 
-
+    // button to remove markers
     document.querySelector('#my-button').addEventListener('click', () =>{
-        console.log('remove')
+        console.log('remove markers')
         removeMarkers()
     })
 
@@ -69,25 +69,7 @@ $(document).ready(function() {
 // Add marker for place to map
 function addMarker(place)
 {
-    console.log('add marker fired')
-    // var myLatlng = {
-    //     lat: place.longitude,
-    //     lng: place.latitude
-
-    // var myLatlng = new google.maps.LatLng(place.longitude,place.latitude);
-    // }
-    // var mapOptions = {
-    //     zoom: 4,
-    //     center: myLatlng
-    // }
-    // var map = new google.maps.Map(map, mapOptions)
-    // map = new google.maps.Map(document.getElementById("map_canvas"),options);
-    // console.log(map)
-
-    // console.log('longitude', place.longitude)
-    // console.log('latitude', place.latitude)
-
-
+    // init marker
     var marker = new google.maps.Marker({
         position: { lat: place.latitude, lng: place.longitude },
         title: `${place.place_name}, ${place.admin_code1}`,
@@ -95,83 +77,39 @@ function addMarker(place)
             text: `${place.place_name}, ${place.admin_code1}`
         }
     })
-    // console.log('map', map)
-    // console.log('marker',marker)
-
+    // to arr
     markers.push(marker)
+    // set on map
     marker.setMap(map);
 
-    var divs = $('.gmnoprint')
 
     marker.addListener('click', function() {
-        console.log('click')
         let parameters = {
             geo: parseInt(place.postal_code)
         };
          $.getJSON("/articles", parameters, function(data, textStatus, jqXHR) {
-        // Call typeahead's callback with search results (i.e., places)
-
-        //     let ul = document.createElement('ul')
-        //     data.forEach((article) => {
-        //         console.log(typeof article)
-        //       let li = document.createElement('li')
-        //       let t = document.createTextNode(`${article.title}`)
-        //       li.appendChild(t)
-        //       ul.appendChild(li)
-        //   })
-        var objs = []
-        for(var i=0; i < 1; i++){
-            // strange array with all at index one
-            let arr = data[i]
-            for(var j=0;j < 5; j++){
-                objs.push(arr[j])
+            // get array of objs
+            var objs = []
+            for(var i=0; i < 1; i++){
+                // strange array with all at index one
+                let arr = data[i]
+                for(var j=0;j < 5; j++){
+                    objs.push(arr[j])
+                }
             }
-        }
-        console.log('objs', objs)
-        let ul = document.createElement('ul')
-        ul.className += ' ul'
-
-        let list = objs.map(obj => `<a href=${obj.link}><li>${obj.title}</li></a>`)
-        .join('')
-        console.log(list)
-        ul.innerHTML = list
-        // console.log(ul.innerHTML)
-        // console.log(ul)
-
-        // document.body.querySelector('.twitter-typeahead').appendChild(ul)
-            showInfo(marker, list)
-
-    //     var marker = new google.maps.Marker({
-    //         animation: google.maps.Animation.DROP,
-    //         label: {
-    //             text: '!'
-    // },
-    //         map: myMap,
-    //         position: myMapOptions.center
-    //     });
-        // ul = document.querySelector('.ul')
-        // console.log(ul)
-
-        // let lis = document.querySelectorAll('div#info > li')
-        // let nodes = Array.from(lis).filter((li) => {
-        // 	return (li.nodeName === 'LI')
-        // })
-        // console.log(nodes)
-
-
-        // let divInfo = document.querySelector("div#info")
-        // divInfo.remove()
-        // let newUl = document.createElement('ul')
-        // let list2 = nodes.map(node => newUl.appendChild(node))
-        // newUl.innerHTML = list2
-        // // ul.appendChild(list2)
-        // divInfo.appendChild(newUl)
+            // create list
+            let ul = document.createElement('ul')
+            ul.className += ' ul'
+            // make list
+            let list = objs.map(obj => `<a href=${obj.link}><li>${obj.title}</li></a>`)
+            // remove commas
+            .join('')
+            ul.innerHTML = list
+            // show window on map
+                showInfo(marker, list)
     });
 
   });
-    // marker.addEventListener('click', () => {
-    //     console.log('clicked')
-    // })
 
 }
 
@@ -217,8 +155,6 @@ function configure()
 
     // Re-center map after place is selected from drop-down
     $("#q").on("typeahead:selected", function(eventObject, suggestion, name) {
-        console.log(eventObject)
-        console.log(suggestion.latitude)
         map.setCenter({lat: parseFloat(suggestion.latitude), lng: parseFloat(suggestion.longitude)});
 
         // Update UI
@@ -249,8 +185,8 @@ function configure()
 // Remove markers from map
 function removeMarkers()
 {
-    console.log('remove markers called')
-    function setMapOnAll(map) {
+    function setMapOnAll(map)
+    {
         for (var i = 0; i < markers.length; i++) {
           markers[i].setMap(map);
         }
