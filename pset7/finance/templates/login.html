@@ -7,7 +7,9 @@
 {% block main %}
     <form action="/login" method="post">
         <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control" name="email" placeholder="Email" type="text"/>
+            <!--needs to be email if reset func is on-->
+            <!--<input autocomplete="off" autofocus class="form-control" name="email" placeholder="Email" type="text"/>-->
+            <input autocomplete="off" autofocus class="form-control" name="username" placeholder="username" type="text"/>
         </div>
         <div class="form-group">
             <input class="form-control" name="password" placeholder="Password" type="password"/>
@@ -15,6 +17,14 @@
         <button class="btn btn-primary" type="submit">Log In</button>
     </form>
     <div>
-        <a href="/reset_password">Click to reset password</a>
+        <!--<span class="d-inline-block" data-toggle="popover" data-content="Disabled popover">-->
+        <!--    <a id='reset-pw' href="/reset_password">Click to reset password</a>-->
+        <!--</span>-->
+        <span class="d-inline-block" data-toggle="popover" data-trigger="hover" data-content="Reset is disabled. Did not work with check50. Code works but is commented out." data-placement="bottom">
+          <a id="reset-pw" href="/reset_password">Click to reset password</a>
+        </span>
+<!--<button type="button" class="btn btn-lg btn-danger" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?">Click to toggle popover</button>-->
+
+        <!--<a id='reset-pw' href="/reset_password">Click to reset password</a>-->
     </div>
 {% endblock %}

@@ -5,7 +5,8 @@ import re
 
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for
-from flask_mail import Mail, Message
+# cannot use in check50ch
+# from flask_mail import Mail, Message
 from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions
@@ -51,101 +52,102 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-mail = Mail(app)
+# mail = Mail(app)
 
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///finance.db")
 
-# make token to send in emal
-def get_reset_token(user_id, expires_sec=1800):
-    # takes in user_id and makes it a token
-    s = Serializer(app.config['SECRET_KEY'], expires_sec)
-    return s.dumps({'user_id': user_id}).decode('utf-8')
+# PERSONAL TOUCH - pw reset does not work with check50
+# # make token to send in emal
+# def get_reset_token(user_id, expires_sec=1800):
+#     # takes in user_id and makes it a token
+#     s = Serializer(app.config['SECRET_KEY'], expires_sec)
+#     return s.dumps({'user_id': user_id}).decode('utf-8')
 
-# verify the token when user clicks the link
-def verify_reset_token(token):
-    print(f"token:{token}")
-    s = Serializer(app.config['SECRET_KEY'])
-    print(f"s:{s}")
-    try:
-        user_id = s.loads(token)['user_id']
-        user_id = user_id[0]['id']
-        print(f"user_id:{user_id}")
-    except:
-        return None
-        # get back user id and verify it is correct
-    return db.execute("SELECT id from USERS where id=(:user_id)", user_id=user_id)
+# # verify the token when user clicks the link
+# def verify_reset_token(token):
+#     print(f"token:{token}")
+#     s = Serializer(app.config['SECRET_KEY'])
+#     print(f"s:{s}")
+#     try:
+#         user_id = s.loads(token)['user_id']
+#         user_id = user_id[0]['id']
+#         print(f"user_id:{user_id}")
+#     except:
+#         return None
+#         # get back user id and verify it is correct
+#     return db.execute("SELECT id from USERS where id=(:user_id)", user_id=user_id)
 
 
-# reset instructions learned here- https://www.youtube.com/watch?v=vutyTx7IaAI
-@app.route("/reset_password", methods=['GET', 'POST'])
-def reset_request():
-    # form = ContactForm()
-    if request.method == 'GET':
-        return render_template('reset_password.html')
-    elif request.method == 'POST':
-        if not request.form.get("email"):
-            return apology("must provide email", 400)
-        # check that is email syntax
-        email = request.form.get("email")
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            flash("Not valid email syntax")
-        #     # get email from form
-            return render_template("reset_password.html")
-    #     # check DB for email
-        email_check = db.execute("SELECT email FROM users WHERE email=(:email)", email=email)
-        print(f"email_check: {email_check}")
-        user_id = db.execute("SELECT id FROM users WHERE email=(:email)", email=email)
-        token = get_reset_token(user_id)
-        # check if user in db
-        if email_check != [] and email_check != None:
-            verify = verify_reset_token(token)
-            # print(f"verify: {verify}")
-            msg = Message("This is an automated email for resetting your password",
-                      sender=app.config['MAIL_USERNAME'],
-                      recipients=[email])
-            msg.body = f'''Click on the link to reset your password.
-{url_for('reset_token', token=token, _external=True)}
+# # reset instructions learned here- https://www.youtube.com/watch?v=vutyTx7IaAI
+# @app.route("/reset_password", methods=['GET', 'POST'])
+# def reset_request():
+#     # form = ContactForm()
+#     if request.method == 'GET':
+#         return render_template('reset_password.html')
+#     elif request.method == 'POST':
+#         if not request.form.get("email"):
+#             return apology("must provide email", 400)
+#         # check that is email syntax
+#         email = request.form.get("email")
+#         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+#             flash("Not valid email syntax")
+#         #     # get email from form
+#             return render_template("reset_password.html")
+#     #     # check DB for email
+#         email_check = db.execute("SELECT email FROM users WHERE email=(:email)", email=email)
+#         print(f"email_check: {email_check}")
+#         user_id = db.execute("SELECT id FROM users WHERE email=(:email)", email=email)
+#         token = get_reset_token(user_id)
+#         # check if user in db
+#         if email_check != [] and email_check != None:
+#             verify = verify_reset_token(token)
+#             # print(f"verify: {verify}")
+#             msg = Message("This is an automated email for resetting your password",
+#                       sender=app.config['MAIL_USERNAME'],
+#                       recipients=[email])
+#             msg.body = f'''Click on the link to reset your password.
+# {url_for('reset_token', token=token, _external=True)}
 
-If you did not request this email, ignore it.
-'''
-            mail.send(msg)
-            flash("email sent")
-        else:
-            flash("That email is not registred")
-        return render_template("reset_password.html")
+# If you did not request this email, ignore it.
+# '''
+#             mail.send(msg)
+#             flash("email sent")
+#         else:
+#             flash("That email is not registred")
+#         return render_template("reset_password.html")
 
-@app.route("/password_reset/<token>", methods=['GET', 'POST'])
-def reset_token(token):
-    # call verify token- return user
-    user = verify_reset_token(token)
-    user_id = user[0]['id']
-    if request.method == 'GET':
-        if not user:
-            flash("That is an invalid/Expired token.", 'error')
-            return render_template("reset_password.html")
-            # return redirect(url_for("reset_password"))
-            # return redirect(url_for("index"))
-        return render_template("password_token.html", token=token)
-    elif request.method == 'POST':
-        if not request.form.get("password"):
-            return apology("must provide new password", 400)
-        elif not request.form.get("password"):
-            return apology("must provide confrimation password", 400)
-        elif request.form.get("password") != request.form.get("confirmation"):
-            return apology("new passwords must match", 400)
-        else:
-            try:
-                #  # # generate new password hash
-                hash = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
-                db.execute("UPDATE users SET hash=(:hash) WHERE id=(:user_id)", hash=hash, user_id=user_id)
-                flash("Password changed")
-                return render_template("login.html")
+# @app.route("/password_reset/<token>", methods=['GET', 'POST'])
+# def reset_token(token):
+#     # call verify token- return user
+#     user = verify_reset_token(token)
+#     user_id = user[0]['id']
+#     if request.method == 'GET':
+#         if not user:
+#             flash("That is an invalid/Expired token.", 'error')
+#             return render_template("reset_password.html")
+#             # return redirect(url_for("reset_password"))
+#             # return redirect(url_for("index"))
+#         return render_template("password_token.html", token=token)
+#     elif request.method == 'POST':
+#         if not request.form.get("password"):
+#             return apology("must provide new password", 400)
+#         elif not request.form.get("password"):
+#             return apology("must provide confrimation password", 400)
+#         elif request.form.get("password") != request.form.get("confirmation"):
+#             return apology("new passwords must match", 400)
+#         else:
+#             try:
+#                 #  # # generate new password hash
+#                 hash = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
+#                 db.execute("UPDATE users SET hash=(:hash) WHERE id=(:user_id)", hash=hash, user_id=user_id)
+#                 flash("Password changed")
+#                 return render_template("login.html")
 
-            except:
-                raise ValueError ("An error occured on hash entry")
-                flash("An error occured")
-                return render_template("login.html")
+#             except:
+#                 raise ValueError ("An error occured on hash entry")
+#                 flash("An error occured")
+#                 return render_template("login.html")
 
 """Show portfolio of stocks"""
 @app.route("/")
@@ -300,6 +302,42 @@ def history():
     return render_template("history.html", data=purchaseData)
 
 
+# VERSION for use with PW func
+# @app.route("/login", methods=["GET", "POST"])
+# def login():
+#     # Forget any user_id
+#     session.clear()
+
+#     # User reached route via POST (as by submitting a form via POST)
+#     if request.method == "POST":
+
+#         # Ensure email was submitted
+#         if not request.form.get("email"):
+#             return apology("must provide email", 403)
+
+#         # Ensure password was submitted
+#         elif not request.form.get("password"):
+#             return apology("must provide password", 403)
+
+#         # Query database for email
+#         rows = db.execute("SELECT * FROM users WHERE email = :email",
+#                           email=request.form.get("email"))
+
+#         # Ensure email exists and password is correct
+#         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
+#             return apology("invalid email and/or password", 403)
+
+#         # Remember which user has logged in
+#         session["user_id"] = rows[0]["id"]
+#         # print('login successful')
+
+#         # Redirect user to home page
+#         return redirect("/")
+
+#     # User reached route via GET (as by clicking a link or via redirect)
+#     else:
+#         return render_template("login.html")
+
 """Log user in"""
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -310,8 +348,8 @@ def login():
     if request.method == "POST":
 
         # Ensure email was submitted
-        if not request.form.get("email"):
-            return apology("must provide email", 403)
+        if not request.form.get("username"):
+            return apology("must provide username", 403)
 
         # Ensure password was submitted
         elif not request.form.get("password"):
@@ -319,7 +357,7 @@ def login():
 
         # Query database for email
         rows = db.execute("SELECT * FROM users WHERE email = :email",
-                          email=request.form.get("email"))
+                          email=request.form.get("username"))
 
         # Ensure email exists and password is correct
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
@@ -369,25 +407,59 @@ def quote():
         return render_template("quote.html", method=request.method)
 
 
+# VERSION for if PW reset is turned on
+# @app.route("/register", methods=["GET", "POST"])
+# def register():
+#     # user GET, then just render template
+#     if request.method == "POST":
+#         if not request.form.get("email"):
+#             return apology("must provide email", 400)
+#         if not request.form.get("password"):
+#             return apology("must provide password", 400)
+#         elif request.form.get("password") != request.form.get("confirmation"):
+#             return apology("passwords must match", 400)
+
+#         email = request.form.get("email")
+#         # # generate password hash
+#         hash = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
+#         # check that is email syntax
+#         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+#             flash("Not valid email syntax")
+#             return render_template("register.html")
+#         email_query = db.execute("SELECT email FROM users WHERE email=(:email)", email=email)
+#         if email_query != []:
+#             return apology("That email already exists. Choose another.", 400)
+
+#         db.execute("INSERT INTO users (email,hash) VALUES (:email, :hash)", email=email, hash=hash)
+#         user_id = db.execute("SELECT id FROM users WHERE email=(:email)", email=email)
+#         session["user_id"] = user_id
+#         flash("You are registed.")
+#         return render_template("index.html")
+
+#     elif request.method == "GET":
+#         return render_template('register.html')
+#     else:
+#         return "Request type not valid"
+
 """Register user"""
 @app.route("/register", methods=["GET", "POST"])
 def register():
     # user GET, then just render template
     if request.method == "POST":
-        if not request.form.get("email"):
-            return apology("must provide email", 400)
+        if not request.form.get("username"):
+            return apology("must provide username", 400)
         if not request.form.get("password"):
             return apology("must provide password", 400)
         elif request.form.get("password") != request.form.get("confirmation"):
             return apology("passwords must match", 400)
 
-        email = request.form.get("email")
+        email = request.form.get("username")
         # # generate password hash
         hash = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
-        # check that is email syntax
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            flash("Not valid email syntax")
-            return render_template("register.html")
+        # # check that is email syntax
+        # if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        #     flash("Not valid email syntax")
+        #     return render_template("register.html")
         email_query = db.execute("SELECT email FROM users WHERE email=(:email)", email=email)
         if email_query != []:
             return apology("That email already exists. Choose another.", 400)

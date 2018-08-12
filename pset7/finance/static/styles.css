@@ -49,3 +49,11 @@ main img
 .last-row {
     background-color:#e9ecef;
 }
+
+#reset-pw {
+    pointer-events:none;
+    opacity:0.5;
+}
+/*#reset-pw:hover::before{*/
+/*    content:'test';*/
+/*}*/
