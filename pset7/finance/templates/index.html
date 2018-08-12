@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messsages %}
+      <p> {{ message }}</p>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+{% block main %}
+<main class="index-page">
+  <div class="container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Symbol</th>
+          <th scope="col">Name</th>
+          <th scope="col">Shares</th>
+          <th scope="col">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for datum in data %}
+          {% if datum['shares'] > 0 %}
+          <tr>
+            <td>{{ datum['symbol'] }}</td>
+            <td>TBA</td>
+            <td>{{ datum['shares'] }}</td>
+            <td>{{ datum['total'] }}</td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+        <tr class="last-row">
+          <td><strong>CASH</strong></td>
+          <td></td>
+          <td></td>
+          <td><strong>{{ cash }}</strong></td>
+          </tr>
+      </tbody>
+    </table>
+
+  </div>
+</main>
+{% endblock %}
