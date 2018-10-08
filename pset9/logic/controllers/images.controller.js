@@ -120,6 +120,7 @@ function manageImageCache(pathname, buffer) {
         log('shifting off cache array')
     }
 }
+// get buffer from array of caches
 function retreiveBufferIndex(pathname, arr) {
     for (let i = 0; i < arr.length; i++) {
         if (Object.keys(arr[i])[0] === pathname)
@@ -127,7 +128,7 @@ function retreiveBufferIndex(pathname, arr) {
     }
     return -1
 }
-function showImage(req, res, quality, format) {
+function showImage(req, res, quality, strFormat) {
     try {
         var fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`
         // get pathname from url
@@ -150,21 +151,26 @@ function showImage(req, res, quality, format) {
             error('width or height is null')
             throw TypeError('Width or height is null in showImage()')
         }
-        // CACHE - if in cache call from cache
-        if (getCache(imgs, pathName)) {
-            let index = retreiveBufferIndex(pathName, imgs)
-            if(index < 0){
-                error('Error: Indexing of cache is less than zero. Illegal index.')
-                throw TypeError('Error: Indexing of cache is less than zero. Illegal index.')
-                return
+        // CACHE
+        // if quality or format in string, skip the cache
+        if(!strFormat && !strFormat){
+             // if in cache call from cache
+            if (getCache(imgs, pathName)) {
+                let index = retreiveBufferIndex(pathName, imgs)
+                if(index < 0){
+                    error('Error: Indexing of cache is less than zero. Illegal index.')
+                    throw TypeError('Error: Indexing of cache is less than zero. Illegal index.')
+                    return
+                }
+                let buffer = imgs[index][pathName]
+                // Initiate the source
+                var bufferStream = new Stream.PassThrough()
+                // Write your buffer
+                bufferStream.end(new Buffer(buffer))
+                log('Serving from : cache')
+                return resize(bufferStream, width, height, strFormat).pipe(res)
             }
-            let buffer = imgs[index][pathName]
-            // Initiate the source
-            var bufferStream = new Stream.PassThrough()
-            // Write your buffer
-            bufferStream.end(new Buffer(buffer))
-            log('Serving from : cache')
-            return resize(bufferStream, width, height, format).pipe(res)
+
         }
 
         let preSets = [
@@ -192,8 +198,12 @@ function showImage(req, res, quality, format) {
                 // https://stackoverflow.com/questions/39277670/how-to-find-random-record-in-mongoose
                 // Get the count of all users
                 Image.count().exec(function(err, count) {
-                    if (err) error(err)
-                    req.flash('error', `A networking error occured: ${err}`)
+                    if (err) {
+                        error(err)
+                        req.flash('error', `A networking error occured: ${err}`)
+                        res.redirect('index', `A networking error occured. Try again.`)
+
+                    }
                         // Get a random entry
                     var random = Math.floor(Math.random() * count)
                     resolve(Image.findOne().skip(random).exec())
@@ -217,8 +227,8 @@ function showImage(req, res, quality, format) {
             }
 
             // if format change in query, change img type
-            if (format) {
-                let newSrc = replaceUrlExt(img.src, format)
+            if (strFormat) {
+                let newSrc = replaceUrlExt(img.src, strFormat)
                 img.src = newSrc
                 log('Foramting changed in Url. New format src:', img.src)
 
@@ -237,6 +247,7 @@ function showImage(req, res, quality, format) {
                 if (response.statusCode === 200) {
 
                     log('status of url call', response.statusCode)
+                    log('called made to', img.src)
                     // make data stream
                     var data = new streamTransform()
                     response.on('data', (chunk) => {
@@ -256,7 +267,7 @@ function showImage(req, res, quality, format) {
                         log('serving from: cloud')
                         // pass to resize func and pipe to res
 
-                        resize(bufferStream, width, height, format).pipe(res)
+                        resize(bufferStream, width, height, strFormat).pipe(res)
                     })
                 } else {
                     error(`An http error occured`, response.statusCode)

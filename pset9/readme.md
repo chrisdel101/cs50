@@ -1,8 +1,7 @@
 ## cs50 Final project
 
-[place-puppy.com](http://place-puppy.com)
-
-To run locally requires the file to be cloned.
+To run locally requires the repo to be cloned.
+`npm install`
 Also necessary is a connection to a [mongodb instance](https://mlab.com/), [cloudinary api keys](https://cloudinary.com/)
 and [mailgun server api keys](https://www.mailgun.com/).
 
@@ -12,6 +11,8 @@ Once cloned, and all the dependencies are loaded
 
 ## Placepuppy
 ### An image placeholder api
+
+[place-puppy.com](http://place-puppy.com)
 
 Use this this api to deliver placholder images to your projects in developement.
 
