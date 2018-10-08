@@ -34,6 +34,11 @@ app.config.update(
     MAIL_USERNAME=app.config['MAIL_USERNAME'],
     MAIL_PASSWORD = app.config['MAIL_PASSWORD']
 )
+# print(app.config.MAIL_SERVER)
+# print(app.config.MAIL_PORT)
+# print(app.config.MAIL_USE_SSL)
+# print(app.config.MAIL_USERNAME)
+# print(app.config.MAIL_PASSWORD)
 # Ensure responses aren't cached
 @app.after_request
 def after_request(response):
